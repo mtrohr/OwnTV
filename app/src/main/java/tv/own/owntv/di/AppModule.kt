@@ -1,0 +1,45 @@
+package tv.own.owntv.di
+
+import org.koin.android.ext.koin.androidContext
+import org.koin.androidx.viewmodel.dsl.viewModel
+import org.koin.dsl.module
+import tv.own.owntv.features.downloads.DownloadsViewModel
+import tv.own.owntv.features.epg.EpgViewModel
+import tv.own.owntv.features.live.LiveViewModel
+import tv.own.owntv.features.movies.MovieViewModel
+import tv.own.owntv.features.profiles.ProfilesViewModel
+import tv.own.owntv.features.search.SearchViewModel
+import tv.own.owntv.features.series.SeriesViewModel
+import tv.own.owntv.features.settings.BackupViewModel
+import tv.own.owntv.features.settings.SettingsViewModel
+import tv.own.owntv.features.settings.data.SettingsRepository
+import tv.own.owntv.features.setup.SetupViewModel
+import tv.own.owntv.features.shell.ShellViewModel
+
+/**
+ * Root Koin module. Each feature will contribute its own bindings as the app grows;
+ * for now this wires settings persistence and the shell view model.
+ */
+val appModule = module {
+    single { SettingsRepository(androidContext()) }
+    viewModel { ShellViewModel(get(), get(), get(), get()) }
+    viewModel { SetupViewModel(get(), get(), get(), get(), get(), get()) }
+    // channelDao, categoryDao, favoriteDao, historyDao, sourceDao, settings, xtreamClient, player
+    viewModel { LiveViewModel(get(), get(), get(), get(), get(), get(), get(), get()) }
+    // movieDao, categoryDao, favoriteDao, historyDao, progressDao, sourceDao, settings, player, downloadManager
+    viewModel { MovieViewModel(get(), get(), get(), get(), get(), get(), get(), get(), get()) }
+    // seriesDao, categoryDao, favoriteDao, historyDao, progressDao, sourceDao, seriesRepository, settings, player, downloadManager
+    viewModel { SeriesViewModel(get(), get(), get(), get(), get(), get(), get(), get(), get(), get()) }
+    // channelDao, movieDao, seriesDao, historyDao, sourceDao, settings, player
+    viewModel { SearchViewModel(get(), get(), get(), get(), get(), get(), get()) }
+    // profileDao, sourceDao, settings
+    viewModel { ProfilesViewModel(get(), get(), get()) }
+    // sourceDao, sourceRepository, settings, connectivity
+    viewModel { SettingsViewModel(get(), get(), get(), get()) }
+    // downloadDao, settings, downloadManager, player
+    viewModel { DownloadsViewModel(get(), get(), get(), get()) }
+    // settings, sourceRepository, channelDao, epgDao, epgRepository, connectivity
+    viewModel { EpgViewModel(get(), get(), get(), get(), get(), get()) }
+    // backupManager
+    viewModel { BackupViewModel(get()) }
+}

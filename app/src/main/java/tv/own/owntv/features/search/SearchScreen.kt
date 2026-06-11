@@ -1,0 +1,181 @@
+package tv.own.owntv.features.search
+
+import androidx.compose.foundation.background
+import androidx.compose.foundation.focusGroup
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.focus.onFocusChanged
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import coil3.compose.AsyncImage
+import org.koin.androidx.compose.koinViewModel
+import androidx.tv.material3.MaterialTheme
+import androidx.tv.material3.Text
+import tv.own.owntv.core.database.entity.ChannelEntity
+import tv.own.owntv.ui.components.FocusableSurface
+import tv.own.owntv.ui.components.OwnTVIcon
+import tv.own.owntv.ui.components.PosterCard
+import tv.own.owntv.ui.components.SearchBar
+import tv.own.owntv.ui.theme.Dimens
+import tv.own.owntv.ui.theme.OwnTVTheme
+
+/**
+ * Phase 11 — global search across channels, movies and series. Channels & movies play straight to
+ * fullscreen; a series result jumps to the Series section.
+ */
+@Composable
+fun SearchScreen(
+    onFullscreen: () -> Unit,
+    onOpenSeries: () -> Unit,
+    onChildFocused: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    val vm: SearchViewModel = koinViewModel()
+    val query by vm.query.collectAsStateWithLifecycle()
+    val results by vm.results.collectAsStateWithLifecycle()
+    val colors = OwnTVTheme.colors
+
+    val searchFocus = remember { FocusRequester() }
+    LaunchedEffect(Unit) { runCatching { searchFocus.requestFocus() } }
+
+    Column(
+        modifier = modifier
+            .fillMaxSize()
+            .background(colors.surface)
+            .onFocusChanged { if (it.hasFocus) onChildFocused() }
+            .padding(horizontal = Dimens.ScreenPaddingH, vertical = Dimens.ScreenPaddingV),
+    ) {
+        Text("Search", style = MaterialTheme.typography.headlineLarge, color = colors.onSurface)
+        Spacer(Modifier.height(14.dp))
+        SearchBar(
+            query = query,
+            onQueryChange = vm::setQuery,
+            placeholder = "Search channels, movies & series…",
+            modifier = Modifier.fillMaxWidth().focusRequester(searchFocus),
+        )
+        Spacer(Modifier.height(20.dp))
+
+        when {
+            query.trim().length < 2 -> CenterHint("Type at least 2 characters to search across everything.")
+            results.isEmpty -> CenterHint("No results for “${query.trim()}”.")
+            else -> LazyColumn(
+                modifier = Modifier.fillMaxSize().focusGroup(),
+                verticalArrangement = Arrangement.spacedBy(22.dp),
+            ) {
+                if (results.channels.isNotEmpty()) {
+                    item {
+                        ResultSection("Channels") {
+                            items(results.channels, key = { "c${it.id}" }) { ch ->
+                                ChannelChip(ch) { vm.playChannel(ch); onFullscreen() }
+                            }
+                        }
+                    }
+                }
+                if (results.movies.isNotEmpty()) {
+                    item {
+                        ResultSection("Movies") {
+                            items(results.movies, key = { "m${it.id}" }) { movie ->
+                                Box(Modifier.width(150.dp)) {
+                                    PosterCard(
+                                        posterUrl = movie.posterUrl,
+                                        title = movie.name,
+                                        rating = movie.rating,
+                                        onClick = { vm.playMovie(movie); onFullscreen() },
+                                    )
+                                }
+                            }
+                        }
+                    }
+                }
+                if (results.series.isNotEmpty()) {
+                    item {
+                        ResultSection("Series") {
+                            items(results.series, key = { "s${it.id}" }) { s ->
+                                Box(Modifier.width(150.dp)) {
+                                    PosterCard(
+                                        posterUrl = s.posterUrl,
+                                        title = s.name,
+                                        rating = s.rating,
+                                        onClick = onOpenSeries,
+                                    )
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun ResultSection(title: String, content: androidx.compose.foundation.lazy.LazyListScope.() -> Unit) {
+    Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+        Text(title.uppercase(), style = MaterialTheme.typography.titleSmall, color = OwnTVTheme.colors.primary, fontWeight = FontWeight.Bold)
+        LazyRow(horizontalArrangement = Arrangement.spacedBy(12.dp), content = content)
+    }
+}
+
+@Composable
+private fun ChannelChip(channel: ChannelEntity, onClick: () -> Unit) {
+    val colors = OwnTVTheme.colors
+    FocusableSurface(
+        onClick = onClick,
+        modifier = Modifier.width(220.dp),
+        shape = RoundedCornerShape(12.dp),
+        contentAlignment = Alignment.CenterStart,
+    ) { focused ->
+        Row(
+            modifier = Modifier.fillMaxWidth().padding(10.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(12.dp),
+        ) {
+            Box(
+                modifier = Modifier.size(44.dp).clip(RoundedCornerShape(8.dp)).background(colors.surfaceContainerLowest),
+                contentAlignment = Alignment.Center,
+            ) {
+                if (!channel.logoUrl.isNullOrBlank()) {
+                    AsyncImage(model = channel.logoUrl, contentDescription = null, modifier = Modifier.fillMaxSize())
+                } else {
+                    OwnTVIcon(OwnTVIcon.LIVE_TV, tint = colors.onSurfaceVariant, modifier = Modifier.size(22.dp))
+                }
+            }
+            Text(
+                channel.name,
+                style = MaterialTheme.typography.titleSmall,
+                color = if (focused) colors.primary else colors.onSurface,
+                maxLines = 2,
+            )
+        }
+    }
+}
+
+@Composable
+private fun CenterHint(text: String) {
+    Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+        Text(text, style = MaterialTheme.typography.bodyLarge, color = OwnTVTheme.colors.onSurfaceVariant)
+    }
+}

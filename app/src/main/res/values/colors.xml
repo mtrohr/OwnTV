@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Launch-window background. Matches the AMOLED dark default to avoid a flash on cold start. -->
+    <color name="owntv_window_bg">#000000</color>
+    <!-- Adaptive launcher icon background. -->
+    <color name="owntv_icon_bg">#050914</color>
+</resources>
