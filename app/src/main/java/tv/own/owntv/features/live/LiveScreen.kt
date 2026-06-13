@@ -188,7 +188,10 @@ fun LiveScreen(
                                     else -> Modifier
                                 },
                                 onFocus = { vm.onChannelFocused(channel) },
-                                onClick = { vm.ensurePlaying(channel); onFullscreen() },
+                                onClick = {
+                                    vm.watchFullscreen(channel, channels.itemSnapshotList.items.filterNotNull())
+                                    onFullscreen()
+                                },
                             )
                         }
                     }

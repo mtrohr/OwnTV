@@ -1,5 +1,18 @@
 # Changelog
 
+## v2.1.0 — Unreleased
+
+- **Channel up/down with the remote** — while watching a channel fullscreen, press **D-pad up/down**
+  (or the **CH +/−** keys) to zap to the next/previous channel in the list you opened, with a brief
+  "now watching" card — no need to go back to the category.
+- **TV-friendly text entry** — focusing a text field (Add source, profile creation, dialogs) no
+  longer pops the keyboard and traps you; it highlights like any control, **OK** opens the keyboard,
+  **Back** closes it — so you can move straight to the Save button. (Fixes #3.)
+- **Easier Fire TV install** — releases now also publish a stable `OwnTV.apk` so a fixed
+  `…/releases/latest/download/OwnTV.apk` link always serves the newest signed build. Fire TV users
+  can install via the **Downloader code `4308278`** (`aftv.news/4308278`); README has full
+  sideload instructions.
+
 ## v2.0.1 — 2026-06-14
 
 Playback polish and fixes from real-TV testing on top of v2.0.0.

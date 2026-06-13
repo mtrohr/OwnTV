@@ -93,6 +93,9 @@ fun OwnTVShell(
     // One-shot: set when leaving the player so the returning browse screen re-focuses the item you played.
     var restoreFocus by remember { mutableStateOf(false) }
     val player = koinInject<OwnTVPlayer>()
+    // Same activity-scoped instance LiveScreen uses — lets the fullscreen HUD zap channels up/down.
+    val liveVm = org.koin.androidx.compose.koinViewModel<tv.own.owntv.features.live.LiveViewModel>()
+    val canZap by liveVm.canZap.collectAsStateWithLifecycle()
 
     val openFullscreen = { restoreFocus = false; playerMode = PlayerMode.FULLSCREEN }
     val exitPlayer = {
@@ -265,10 +268,13 @@ fun OwnTVShell(
             // Direct render mode: mpv can't draw subtitles on the decoder-owned surface — the app does.
             if (isFull) tv.own.owntv.player.SubtitleOverlay(player = player, modifier = Modifier.fillMaxSize())
             if (isFull) {
+                val liveZap = player.isLiveContent && canZap
                 PlayerHud(
                     player = player,
                     onBack = exitPlayer,
                     onPip = if (!player.isLiveContent) dockPlayer else null,
+                    onChannelUp = if (liveZap) ({ liveVm.zap(-1) }) else null,
+                    onChannelDown = if (liveZap) ({ liveVm.zap(1) }) else null,
                     modifier = Modifier.fillMaxSize(),
                 )
             } else {

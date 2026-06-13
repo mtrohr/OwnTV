@@ -179,6 +179,24 @@ tv.own.owntv/
 - 📺 **[Player design reference](extras/player.html)** — an interactive Material 3 mockup of the player UI.
 - 🖼️ `extras/logo.png` — the OwnTV logo.
 
+## 📥 Installing (Fire TV / Android TV)
+
+Grab the signed APK from the [**latest release**](https://github.com/ahXN00/OwnTV/releases/latest) and
+sideload it. A fixed link always points at the newest signed build:
+
+```
+https://github.com/ahXN00/OwnTV/releases/latest/download/OwnTV.apk
+```
+
+- **Fire TV** — install the **Downloader** app (by AFTVnews) from the Amazon Appstore, then enter the
+  **Downloader code `4308278`** (or [`aftv.news/4308278`](https://aftv.news/4308278), which always
+  points at the latest signed `OwnTV.apk`). Enable *Apps from Unknown Sources* if prompted.
+- **Android TV / Google TV** — sideload the APK with your tool of choice (e.g. *Send files to TV*,
+  a USB drive, or `adb install OwnTV.apk`).
+
+> Only install the APK from this repository's official Releases (or the `…/releases/latest/download/OwnTV.apk`
+> link above). It's the build signed by this project's CI — third-party re-hosts aren't endorsed.
+
 ## 🛠️ Building & running
 
 1. Open the project in **Android Studio** (a version matching AGP 9.x) and let Gradle sync.

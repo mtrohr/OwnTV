@@ -65,7 +65,14 @@ private val TEAL = Color(0xFF52DBC8)
 private enum class HudDialog { NONE, AUDIO, SUBS, SPEED, ZOOM, VOLUME }
 
 @Composable
-fun PlayerHud(player: OwnTVPlayer, onBack: () -> Unit, onPip: (() -> Unit)? = null, modifier: Modifier = Modifier) {
+fun PlayerHud(
+    player: OwnTVPlayer,
+    onBack: () -> Unit,
+    onPip: (() -> Unit)? = null,
+    onChannelUp: (() -> Unit)? = null,
+    onChannelDown: (() -> Unit)? = null,
+    modifier: Modifier = Modifier,
+) {
     val isPlaying by player.isPlaying.collectAsStateWithLifecycle()
     val position by player.position.collectAsStateWithLifecycle()
     val duration by player.duration.collectAsStateWithLifecycle()
@@ -88,6 +95,12 @@ fun PlayerHud(player: OwnTVPlayer, onBack: () -> Unit, onPip: (() -> Unit)? = nu
     var controlsVisible by remember { mutableStateOf(true) }
     var wakeTick by remember { mutableIntStateOf(0) }
     val forceShow = error != null || dialog != HudDialog.NONE
+    // Channel zap (live only): a brief "now watching" card on up/down without revealing the full HUD.
+    val canZap = onChannelUp != null && onChannelDown != null
+    var channelFlash by remember { mutableIntStateOf(0) }
+    var showFlash by remember { mutableStateOf(false) }
+    LaunchedEffect(channelFlash) { if (channelFlash > 0) { showFlash = true; delay(3000); showFlash = false } }
+    val zap: (Int) -> Unit = { d -> (if (d < 0) onChannelUp else onChannelDown)?.invoke(); channelFlash++ }
 
     LaunchedEffect(forceShow) { if (forceShow) controlsVisible = true }
     LaunchedEffect(controlsVisible, wakeTick, forceShow) {
@@ -101,8 +114,17 @@ fun PlayerHud(player: OwnTVPlayer, onBack: () -> Unit, onPip: (() -> Unit)? = nu
 
     Box(
         modifier = modifier.fillMaxSize().onPreviewKeyEvent { e ->
-            if (e.type == KeyEventType.KeyDown && controlsVisible) wakeTick++
-            false
+            if (e.type != KeyEventType.KeyDown) return@onPreviewKeyEvent false
+            when {
+                // Dedicated channel keys always zap; D-pad up/down zaps only while the HUD is hidden
+                // (when it's shown, up/down navigate the controls as usual).
+                canZap && e.key == Key.ChannelUp -> { zap(-1); true }
+                canZap && e.key == Key.ChannelDown -> { zap(1); true }
+                canZap && !controlsVisible && e.key == Key.DirectionUp -> { zap(-1); true }
+                canZap && !controlsVisible && e.key == Key.DirectionDown -> { zap(1); true }
+                controlsVisible -> { wakeTick++; false }
+                else -> false
+            }
         },
     ) {
         if (!controlsVisible) {
@@ -110,6 +132,11 @@ fun PlayerHud(player: OwnTVPlayer, onBack: () -> Unit, onPip: (() -> Unit)? = nu
                 Modifier.fillMaxSize().focusRequester(catchFocus).focusable()
                     .onKeyEvent { e -> if (e.type == KeyEventType.KeyDown && e.key != Key.Back) { controlsVisible = true; true } else false },
             )
+        }
+
+        // Channel flash card (zapping with the HUD hidden) — shown independently of the full controls.
+        if (isLive && showFlash && !controlsVisible) {
+            ChannelCard(player, modifier = Modifier.align(Alignment.TopStart).padding(start = 28.dp, top = 28.dp))
         }
 
         if (controlsVisible) {

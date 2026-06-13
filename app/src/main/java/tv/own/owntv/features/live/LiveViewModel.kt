@@ -227,6 +227,31 @@ class LiveViewModel(
         player.play(channel.streamUrl, title = channel.name, logoUrl = channel.logoUrl, isLive = true, muted = !livePreviewAudio.value)
     }
 
+    // The ordered channel list of the row the user opened fullscreen from, so the player HUD can
+    // zap up/down with the remote without going back to the list. Snapshot of the loaded paging
+    // window (enough neighbours either side of the opened channel).
+    private var zapList: List<ChannelEntity> = emptyList()
+    private val _canZap = MutableStateFlow(false)
+    val canZap: StateFlow<Boolean> = _canZap.asStateFlow()
+
+    /** Open a channel fullscreen, remembering [list] so the remote can zap up/down from here. */
+    fun watchFullscreen(channel: ChannelEntity, list: List<ChannelEntity>) {
+        zapList = list
+        _canZap.value = list.size > 1
+        ensurePlaying(channel)
+    }
+
+    /** Zap to the neighbouring channel ([delta] = +1 down / -1 up) within the opened list. */
+    fun zap(delta: Int) {
+        val list = zapList
+        if (list.size < 2) return
+        val i = list.indexOfFirst { it.id == _previewChannel.value?.id }
+        if (i < 0) return
+        val next = (i + delta).coerceIn(0, list.size - 1)
+        if (next == i) return // already at an end — clamp
+        ensurePlaying(list[next])
+    }
+
     /** Explicit watch (e.g. going fullscreen): plays with sound and records history. */
     fun ensurePlaying(channel: ChannelEntity) {
         _previewChannel.value = channel
