@@ -92,10 +92,10 @@ class SettingsViewModel(
     fun setHwDecoding(enabled: Boolean) { viewModelScope.launch { settings.setHwDecoding(enabled) } }
 
     val renderMode: StateFlow<SettingsRepository.RenderMode> =
-        settings.renderMode.stateIn(viewModelScope, SharingStarted.Eagerly, SettingsRepository.RenderMode.AUTO)
+        settings.renderMode.stateIn(viewModelScope, SharingStarted.Eagerly, SettingsRepository.RenderMode.SMOOTH)
     fun setRenderMode(name: String) {
         viewModelScope.launch {
-            settings.setRenderMode(runCatching { SettingsRepository.RenderMode.valueOf(name) }.getOrDefault(SettingsRepository.RenderMode.AUTO))
+            settings.setRenderMode(runCatching { SettingsRepository.RenderMode.valueOf(name) }.getOrDefault(SettingsRepository.RenderMode.SMOOTH))
         }
     }
 

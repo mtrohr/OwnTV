@@ -1,6 +1,7 @@
 package tv.own.owntv
 
 import android.os.Bundle
+import android.view.WindowManager
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.background
@@ -35,11 +36,20 @@ class MainActivity : ComponentActivity() {
         // Backgrounded (Home / another app): stop playback and free the demuxer cache + decoder
         // buffers — holding them while invisible got the process LMK-killed on real TVs.
         if (!isChangingConfigurations) player.onAppBackgrounded()
+        window.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
+            // Hold the screen on while video is actually playing, so the TV screensaver doesn't
+            // start mid-channel/episode; released when paused/stopped (then the screensaver is fine).
+            val playing by player.isPlaying.collectAsStateWithLifecycle()
+            LaunchedEffect(playing) {
+                if (playing) window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+                else window.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+            }
+
             val viewModel: ShellViewModel = koinViewModel()
             val themeMode by viewModel.themeMode.collectAsStateWithLifecycle()
             val accent by viewModel.accent.collectAsStateWithLifecycle()

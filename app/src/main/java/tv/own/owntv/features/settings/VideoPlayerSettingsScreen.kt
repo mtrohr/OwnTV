@@ -146,7 +146,7 @@ fun VideoPlayerSettingsScreen(onBack: () -> Unit, modifier: Modifier = Modifier)
         )
         Row2(
             icon = OwnTVIcon.VIDEO, title = "Renderer",
-            desc = "Auto picks the smoothest path for this device; Quality forces mpv's full renderer.",
+            desc = "Smooth = best for TVs; Auto = pick per device; Quality = full mpv GL renderer, heavier.",
             chip = renderMode.label, chevron = true,
             modifier = Modifier.focusRequester(dialogRowFocus.getValue(Dialog.RENDERER)),
             onClick = { dialog = Dialog.RENDERER },
@@ -211,7 +211,7 @@ fun VideoPlayerSettingsScreen(onBack: () -> Unit, modifier: Modifier = Modifier)
         )
         Dialog.RENDERER -> PickerDialog(
             title = "Renderer",
-            options = tv.own.owntv.features.settings.data.SettingsRepository.RenderMode.entries.map { it.name to it.label },
+            options = tv.own.owntv.features.settings.data.SettingsRepository.RenderMode.entries.map { it.name to "${it.label}  (${it.hint})" },
             selected = renderMode.name,
             onSelect = { vm.setRenderMode(it); dialog = Dialog.NONE },
             onDismiss = { dialog = Dialog.NONE },

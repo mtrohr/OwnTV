@@ -1,5 +1,21 @@
 # Changelog
 
+## v2.0.1 — 2026-06-14
+
+Playback polish and fixes from real-TV testing on top of v2.0.0.
+
+- **Keep the screen awake while watching** — the TV screensaver no longer kicks in during playback
+  (live, movies or series); it returns to normal when you pause or stop.
+- **Renderer modes** — the renderer picker (Settings → Video Player) now offers **Smooth** (default —
+  the direct, TV-optimized path), **Auto** (picks per device), and **Quality** (the full mpv GL
+  renderer — heavier on weak TVs). Each option shows a one-line hint.
+- **Recovers from a busy decoder** — a stream that doesn't start (e.g. the hardware decoder is still
+  busy right after a TV cold-boot) is now retried automatically a few times before any error shows,
+  instead of getting stuck. A transient hiccup no longer drops you to the slower renderer for the
+  rest of the session.
+- **Smoother subtitles, quieter logs** — the app-drawn subtitle overlay is fed more efficiently
+  (no more constant background polling).
+
 ## v2.0.0 — 2026-06-13
 
 This update delivers the complete, long-term vision for the app. I’ve been working on this feature set for a long time! My original goal was to launch with everything ready, but I decided to get the core IPTV features into your hands early so we could catch and fix any bugs first. Now, the full roadmap is finally here. This update brings you content customization, a smarter guide, resume & complete backup, in-app updates, custom accent colors, and a top-to-bottom D-pad navigation overhaul, plus all the bug fixes from the last update.
