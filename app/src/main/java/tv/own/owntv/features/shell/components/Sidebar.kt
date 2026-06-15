@@ -19,6 +19,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -66,7 +67,13 @@ fun Sidebar(
     val colors = OwnTVTheme.colors
     var hasFocus by remember { mutableStateOf(false) }
     val scope = rememberCoroutineScope()
-    val expanded = hasFocus
+    // Expand only after focus settles (~120ms), and collapse instantly. A transient focus blip — e.g.
+    // a Settings submenu unmounting and routing focus back through here for a moment before the
+    // settings row reclaims it — would otherwise flash the sidebar open then closed.
+    var expanded by remember { mutableStateOf(false) }
+    LaunchedEffect(hasFocus) {
+        if (hasFocus) { kotlinx.coroutines.delay(120); expanded = true } else expanded = false
+    }
     val width by animateDpAsState(
         targetValue = if (expanded) Dimens.SidebarWidthExpanded else Dimens.SidebarWidthCollapsed,
         label = "sidebarWidth",

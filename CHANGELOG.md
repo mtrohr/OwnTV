@@ -1,5 +1,17 @@
 # Changelog
 
+## v2.2.4 — 2026-06-14
+
+- **Back from a series returns to the right poster** — pressing **Back** inside a series (or its
+  on-screen back button) now puts focus back on the **series you opened** in the grid instead of jumping
+  to the sidebar (it now scrolls to and focuses it, matching how Movies already behaves).
+- **No more sidebar flicker in Settings** — moving between a Settings sub-screen (Playlists, EPG,
+  About…) and the Settings menu no longer makes the left rail briefly expand and collapse; it only
+  expands once focus actually settles on it. (The sidebar is shared, so this covers every section.)
+- **…and no category-rail flicker** — the same settle-before-expand fix now applies to the **category
+  rail** (Live TV / Movies / Series), so it no longer briefly widens then collapses when focus passes
+  through it during a screen transition.
+
 ## v2.2.3 — 2026-06-14
 
 > 🔁 **Please re-sync your playlists after updating.** This release switches live channels to the more

@@ -85,8 +85,14 @@ fun CategoryRail(
         if (q.isEmpty()) categories.indices.toList()
         else categories.indices.filter { categories[it].fullName.contains(q, ignoreCase = true) }
     }
+    // Widen/expand only after focus settles (~120ms); collapse instantly. A transient focus blip on the
+    // rail (focus passing through during a screen transition) would otherwise flash it open then closed.
+    var expanded by remember { mutableStateOf(false) }
+    LaunchedEffect(hasFocus) {
+        if (hasFocus) { kotlinx.coroutines.delay(120); expanded = true } else expanded = false
+    }
     val width by animateDpAsState(
-        targetValue = if (hasFocus) Dimens.RailWidthExpanded else Dimens.RailWidth,
+        targetValue = if (expanded) Dimens.RailWidthExpanded else Dimens.RailWidth,
         animationSpec = tween(150),
         label = "railWidth",
     )
@@ -156,7 +162,7 @@ fun CategoryRail(
                     // RailPill only lights the green "active" fill when this pill is BOTH the current
                     // category AND focused — so the highlight always follows focus and nothing is auto-lit.
                     selected = index == selectedIndex,
-                    expanded = hasFocus,
+                    expanded = expanded,
                     onClick = { onSelect(index) },
                     modifier = if (index == selectedIndex) Modifier.focusRequester(selectedFocus) else Modifier,
                 )

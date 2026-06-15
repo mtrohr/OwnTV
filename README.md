@@ -125,10 +125,14 @@ targets **Android TV only** (leanback launcher, D-pad-first UI).
     <td align="center"><img src="extras/screenshots/Downloads.png" alt="Downloads"><br><sub>Downloads</sub></td>
     <td align="center"><img src="extras/screenshots/Settings_Main.png" alt="Settings"><br><sub>Settings</sub></td>
   </tr>
+  <tr>
+    <td align="center"><img src="extras/screenshots/EPG_loaded.png" alt="TV Guide"><br><sub>TV Guide (EPG)</sub></td>
+    <td align="center"><img src="extras/screenshots/Settings_Personalization.png" alt="Personalization"><br><sub>Personalization</sub></td>
+  </tr>
 </table>
 
 More in **[extras/screenshots/](extras/screenshots/)** — Live TV (preview off), playlist management,
-personalization, profiles & sources settings.
+profiles & sources settings.
 
 ---
 

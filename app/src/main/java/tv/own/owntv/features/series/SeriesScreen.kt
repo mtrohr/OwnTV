@@ -124,13 +124,20 @@ private fun SeriesGrid(
     val selectedItem = railItems.getOrNull(selectedIndex)
     val gridSelFocus = remember { androidx.compose.ui.focus.FocusRequester() }
     val firstItemFocus = remember { androidx.compose.ui.focus.FocusRequester() }
+    val gridState = androidx.compose.foundation.lazy.grid.rememberLazyGridState()
 
-    // Back from a show's episodes: refocus the poster you opened (the pane's onEnter prefers
-    // gridSelFocus, so even when this request is intercepted it lands on the same poster).
+    // Back from a show's episodes: scroll the grid to the poster you opened, then focus it. It may be
+    // far down and not composed, so without scrolling the focus request fails and focus falls to the
+    // sidebar (the same scroll-then-focus fix Movies uses).
     LaunchedEffect(restoreSelected, series.itemCount) {
         if (restoreSelected && series.itemCount > 0) {
-            kotlinx.coroutines.delay(80)
-            if (runCatching { gridSelFocus.requestFocus() }.isFailure) {
+            val sel = selectedSeries
+            val idx = if (sel != null) series.itemSnapshotList.items.indexOfFirst { it.id == sel.id } else -1
+            if (idx >= 0) {
+                runCatching { gridState.scrollToItem(idx) }
+                kotlinx.coroutines.delay(60)
+                runCatching { gridSelFocus.requestFocus() }
+            } else {
                 runCatching { firstItemFocus.requestFocus() }
             }
             onRestoredSelected()
@@ -181,6 +188,7 @@ private fun SeriesGrid(
                 }
             } else {
                 LazyVerticalGrid(
+                    state = gridState,
                     columns = GridCells.Adaptive(minSize = 130.dp),
                     horizontalArrangement = Arrangement.spacedBy(12.dp),
                     verticalArrangement = Arrangement.spacedBy(12.dp),
