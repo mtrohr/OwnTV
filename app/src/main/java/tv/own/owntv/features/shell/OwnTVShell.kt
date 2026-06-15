@@ -96,14 +96,19 @@ fun OwnTVShell(
     // One-shot: set when leaving the player so the returning browse screen re-focuses the item you played.
     var restoreFocus by remember { mutableStateOf(false) }
     val player = koinInject<OwnTVPlayer>()
-    // Same activity-scoped instance LiveScreen uses — lets the fullscreen HUD zap channels up/down.
+    // Same activity-scoped instances the Live/Guide screens use — lets the fullscreen HUD zap channels
+    // up/down (CH+/CH-) through whichever section's list opened the stream.
     val liveVm = org.koin.androidx.compose.koinViewModel<tv.own.owntv.features.live.LiveViewModel>()
-    val canZap by liveVm.canZap.collectAsStateWithLifecycle()
+    val epgVm = org.koin.androidx.compose.koinViewModel<tv.own.owntv.features.epg.EpgViewModel>()
+    val liveCanZap by liveVm.canZap.collectAsStateWithLifecycle()
+    val epgCanZap by epgVm.canZap.collectAsStateWithLifecycle()
+    // Which section armed the current fullscreen stream — picks whose channel list CH+/CH- step through.
+    var zapSource by remember { mutableStateOf<MainSection?>(null) }
 
     // Opening content from a browse screen goes fullscreen — UNLESS the player is already docked as a
     // mini-player, in which case it stays docked and just swaps to the newly-selected stream (the VM
     // already started it), so picking a channel updates the PiP window in place (#6).
-    val openFullscreen = { restoreFocus = false; if (playerMode != PlayerMode.MINI) playerMode = PlayerMode.FULLSCREEN }
+    val openFullscreen = { restoreFocus = false; zapSource = selectedSection; if (playerMode != PlayerMode.MINI) playerMode = PlayerMode.FULLSCREEN }
     // The mini-player's own expand button always maximizes.
     val expandPlayer = { restoreFocus = false; playerMode = PlayerMode.FULLSCREEN }
     val exitPlayer = {
@@ -279,13 +284,20 @@ fun OwnTVShell(
             // Direct render mode: mpv can't draw subtitles on the decoder-owned surface — the app does.
             if (isFull) tv.own.owntv.player.SubtitleOverlay(player = player, modifier = Modifier.fillMaxSize())
             if (isFull) {
-                val liveZap = player.isLiveContent && canZap
+                // CH+/CH- zap through the channel list of whichever section opened the current stream
+                // (Live TV or the Guide); never for VOD.
+                val zap: ((Int) -> Unit)? = when {
+                    !player.isLiveContent -> null
+                    zapSource == MainSection.EPG && epgCanZap -> epgVm::zap
+                    zapSource == MainSection.LIVE_TV && liveCanZap -> liveVm::zap
+                    else -> null
+                }
                 PlayerHud(
                     player = player,
                     onBack = exitPlayer,
                     onPip = dockPlayer, // PiP/dock now available for live too (#6)
-                    onChannelUp = if (liveZap) ({ liveVm.zap(-1) }) else null,
-                    onChannelDown = if (liveZap) ({ liveVm.zap(1) }) else null,
+                    onChannelUp = zap?.let { z -> { z(-1) } },
+                    onChannelDown = zap?.let { z -> { z(1) } },
                     modifier = Modifier.fillMaxSize(),
                 )
             } else {

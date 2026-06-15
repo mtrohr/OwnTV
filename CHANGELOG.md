@@ -1,5 +1,28 @@
 # Changelog
 
+## v2.2.3 — 2026-06-14
+
+> 🔁 **Please re-sync your playlists after updating.** This release switches live channels to the more
+> widely-supported **MPEG-TS** stream format — but each channel's link is built when you sync, so your
+> existing channels keep the old format until you re-sync. Open **Settings → Playlists** and press
+> **Re-sync** on each one so every channel picks up the change.
+
+- **Channels that wouldn't load now play** — live streams use the universal **MPEG-TS (`.ts`)** endpoint
+  instead of HLS (`.m3u8`); some Xtream providers only serve raw MPEG-TS and don't offer the `.m3u8`
+  wrapper, so their channels failed to load entirely. And if a `.ts` channel still won't start, the
+  player now **automatically falls back to the `.m3u8` variant** before erroring — so the rare HLS-only
+  panel keeps working too.
+- **Back hides the player controls first** — while watching, when the player UI is showing, **Back** now
+  just hides it instead of leaving the channel; press **Back** again (with the controls hidden) to exit
+  the player.
+- **Smarter playback retries** — when a stream stalls, the silent auto-retry now uses **exponential
+  backoff** (1s · 2s · 4s) to better ride out cold-boot decoder lag, **skips retrying when you're
+  offline** (shows a "No internet" message immediately instead of spinning), and **fails faster on
+  movies/episodes** — a bad VOD link errors after one try instead of three.
+- **Channel zapping from the Guide** — the **CH+ / CH−** keys now surf channels while watching a channel
+  opened from the **TV Guide**, stepping through the guide's channel list — just like from the Live TV
+  list.
+
 ## v2.2.2 — 2026-06-14
 
 - **Category rail highlight follows your focus** — the rail no longer keeps your current category lit

@@ -108,14 +108,31 @@ class EpgViewModel(
     var lastTunedChannelId: Long? = null
         private set
 
+    /** True once a guide channel is playing fullscreen and there's a list to step through, so the
+     *  player HUD's CH+/CH- keys can zap up/down the guide's channels (like the Live list). */
+    private val _canZap = MutableStateFlow(false)
+    val canZap: StateFlow<Boolean> = _canZap.asStateFlow()
+
     /** Tune to a channel from the guide (fullscreen playback + history, like the Live list). */
     fun play(channel: ChannelEntity) {
         lastTunedChannelId = channel.id
+        _canZap.value = _state.value.channels.size > 1
         player.play(channel.streamUrl, title = channel.name, logoUrl = channel.logoUrl, isLive = true)
         viewModelScope.launch {
             val pid = settings.activeProfileId.first()
             if (pid >= 0) historyDao.record(WatchHistoryEntity(profileId = pid, mediaType = MediaType.LIVE, itemId = channel.id))
         }
+    }
+
+    /** Zap to the neighbouring guide channel ([delta] = +1 down / -1 up), CH+/CH- from the player. */
+    fun zap(delta: Int) {
+        val list = _state.value.channels
+        if (list.size < 2) return
+        val i = list.indexOfFirst { it.id == lastTunedChannelId }
+        if (i < 0) return
+        val next = (i + delta).coerceIn(0, list.size - 1)
+        if (next == i) return // already at an end
+        play(list[next])
     }
 
     fun load() {

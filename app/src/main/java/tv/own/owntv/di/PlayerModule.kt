@@ -6,5 +6,6 @@ import tv.own.owntv.player.OwnTVPlayer
 
 /** App-wide libmpv player. */
 val playerModule = module {
-    single { OwnTVPlayer(androidContext(), get()) }
+    // context, settings, connectivity
+    single { OwnTVPlayer(androidContext(), get(), get()) }
 }

@@ -95,6 +95,10 @@ fun PlayerHud(
     var controlsVisible by remember { mutableStateOf(true) }
     var wakeTick by remember { mutableIntStateOf(0) }
     val forceShow = error != null || dialog != HudDialog.NONE
+    // First Back hides the controls (instead of leaving the channel); with the controls already hidden
+    // this handler is disabled, so Back falls through to the shell, which exits the player. Also disabled
+    // while an error/dialog is up (a dialog handles its own Back; an error should exit).
+    BackHandler(enabled = controlsVisible && !forceShow) { controlsVisible = false }
     // Channel zap (live only): a brief "now watching" card on up/down without revealing the full HUD.
     val canZap = onChannelUp != null && onChannelDown != null
     var channelFlash by remember { mutableIntStateOf(0) }
