@@ -7,5 +7,7 @@ data class ServerOption(
 )
 
 data class RemoteConfig(
+    val version: Long,
+    val ttlSeconds: Long,
     val servers: List<ServerOption>,
 )

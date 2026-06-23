@@ -47,7 +47,7 @@ val dataModule = module {
             .build()
     }
     single { HttpClient(get()) }
-    single { RemoteConfigRepository(get()) }
+    single { RemoteConfigRepository(androidContext(), get()) }
     single { ConnectivityObserver(androidContext()) }
     single { CustomizationStore(androidContext()) }
     single { tv.own.owntv.core.epg.EpgSourceStore(androidContext()) }
