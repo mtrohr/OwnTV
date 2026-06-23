@@ -62,7 +62,7 @@ fun BrandLockup(
                     append("Own")
                 }
                 withStyle(androidx.compose.ui.text.SpanStyle(color = AccentCyan, fontWeight = FontWeight.Bold)) {
-                    append("TV")
+                    append("TV AHV")
                 }
             },
             fontSize = textSize.sp,
