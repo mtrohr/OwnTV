@@ -58,11 +58,20 @@ fun BrandLockup(
         }
         Text(
             text = buildAnnotatedString {
-                withStyle(androidx.compose.ui.text.SpanStyle(color = colors.textPrimary, fontWeight = FontWeight.Bold)) {
+                withStyle(androidx.compose.ui.text.SpanStyle(color = androidx.compose.ui.graphics.Color.White, fontWeight = FontWeight.Bold)) {
                     append("Own")
                 }
                 withStyle(androidx.compose.ui.text.SpanStyle(color = AccentCyan, fontWeight = FontWeight.Bold)) {
-                    append("TV AHV")
+                    append("TV")
+                }
+                withStyle(androidx.compose.ui.text.SpanStyle(color = androidx.compose.ui.graphics.Color.Red, fontWeight = FontWeight.Bold)) {
+                    append("A")
+                }
+                withStyle(androidx.compose.ui.text.SpanStyle(color = androidx.compose.ui.graphics.Color(0xFF000080), fontWeight = FontWeight.Bold)) {
+                    append("H")
+                }
+                withStyle(androidx.compose.ui.text.SpanStyle(color = androidx.compose.ui.graphics.Color(0xFFFF03FF), fontWeight = FontWeight.Bold)) {
+                    append("V")
                 }
             },
             fontSize = textSize.sp,
