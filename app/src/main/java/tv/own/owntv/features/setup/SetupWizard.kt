@@ -61,6 +61,7 @@ fun Onboarding(firstRun: Boolean, onDone: () -> Unit, onCancel: () -> Unit, modi
     var step by remember { mutableStateOf(if (firstRun) Step.WELCOME else Step.CREATE_PROFILE) }
     val importState by vm.state.collectAsStateWithLifecycle()
     val progress by vm.progress.collectAsStateWithLifecycle()
+    val servers by vm.servers.collectAsStateWithLifecycle()
     var existing by remember { mutableStateOf<List<SourceEntity>>(emptyList()) }
     // Where "Try Again" returns to when an import fails (new source vs. linking existing).
     var importOrigin by remember { mutableStateOf(Step.ADD_SOURCE) }
@@ -94,8 +95,8 @@ fun Onboarding(firstRun: Boolean, onDone: () -> Unit, onCancel: () -> Unit, modi
                 onSkip = { vm.finish(); onDone() },
             )
             Step.ADD_SOURCE -> AddSourceScreen(
+                servers = servers,
                 onStartXtream = { name, server, user, pass, ua, epg, refresh -> vm.startXtream(name, server, user, pass, ua, epg, refresh); importOrigin = Step.ADD_SOURCE; step = Step.IMPORTING },
-                onStartM3u = { name, url, ua, epg, refresh -> vm.startM3u(name, url, ua, epg, refresh); importOrigin = Step.ADD_SOURCE; step = Step.IMPORTING },
                 onBack = { step = Step.ADD_CONTENT },
             )
             Step.IMPORTING -> ImportProgressScreen(

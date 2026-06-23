@@ -54,6 +54,7 @@ fun ManageSourcesScreen(onBack: () -> Unit, modifier: Modifier = Modifier) {
     val progress by vm.progress.collectAsStateWithLifecycle()
     val refreshIds by vm.refreshSourceIds.collectAsStateWithLifecycle()
     val defaultId by vm.defaultSourceId.collectAsStateWithLifecycle()
+    val servers by vm.servers.collectAsStateWithLifecycle()
     val colors = OwnTVTheme.colors
 
     var showAdd by remember { mutableStateOf(false) }
@@ -115,10 +116,10 @@ fun ManageSourcesScreen(onBack: () -> Unit, modifier: Modifier = Modifier) {
 
     editingSource?.let { src ->
         AddSourceScreen(
+            servers = servers,
             initial = src,
             initialRefresh = src.id in refreshIds,
             onStartXtream = { n, server, u, p, ua, epg, refresh -> vm.updateSource(src.id, n, server, u, p, ua, epg, refresh); editingSource = null },
-            onStartM3u = { n, url, ua, epg, refresh -> vm.updateSource(src.id, n, url, "", "", ua, epg, refresh); editingSource = null },
             onBack = { editingSource = null },
             modifier = modifier,
         )
@@ -128,8 +129,8 @@ fun ManageSourcesScreen(onBack: () -> Unit, modifier: Modifier = Modifier) {
     if (showAdd) {
         when (val s = importState) {
             SettingsViewModel.ImportState.Idle -> AddSourceScreen(
+                servers = servers,
                 onStartXtream = { n, server, u, p, ua, epg, refresh -> vm.addXtream(n, server, u, p, ua, epg, refresh) },
-                onStartM3u = { n, url, ua, epg, refresh -> vm.addM3u(n, url, ua, epg, refresh) },
                 onBack = { showAdd = false },
                 modifier = modifier,
             )

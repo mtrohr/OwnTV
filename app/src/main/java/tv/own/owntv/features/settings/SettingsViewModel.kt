@@ -15,6 +15,8 @@ import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import tv.own.owntv.core.config.RemoteConfigRepository
+import tv.own.owntv.core.config.ServerOption
 import tv.own.owntv.core.database.dao.SourceDao
 import tv.own.owntv.core.database.entity.SourceEntity
 import tv.own.owntv.core.network.ConnectivityObserver
@@ -36,7 +38,17 @@ class SettingsViewModel(
     private val epgDao: tv.own.owntv.core.database.dao.EpgDao,
     private val importFinalizer: tv.own.owntv.core.sync.ImportFinalizer,
     private val channelDao: tv.own.owntv.core.database.dao.ChannelDao,
+    private val remoteConfig: RemoteConfigRepository,
 ) : ViewModel() {
+
+    private val _servers = MutableStateFlow<List<ServerOption>>(emptyList())
+    val servers: StateFlow<List<ServerOption>> = _servers.asStateFlow()
+
+    init {
+        viewModelScope.launch {
+            runCatching { _servers.value = remoteConfig.fetchConfig().servers }
+        }
+    }
 
     /** Stored EPG programme count for a source — the row shows it as the EPG status. */
     fun epgCount(sourceId: Long): kotlinx.coroutines.flow.Flow<Int> = epgDao.countForSource(sourceId)

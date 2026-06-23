@@ -6,6 +6,7 @@ import org.koin.android.ext.koin.androidContext
 import org.koin.dsl.module
 import tv.own.owntv.core.backup.BackupManager
 import tv.own.owntv.core.backup.UserDataResolver
+import tv.own.owntv.core.config.RemoteConfigRepository
 import tv.own.owntv.core.customize.CustomizationStore
 import tv.own.owntv.core.download.DownloadManager
 import tv.own.owntv.core.network.ConnectivityObserver
@@ -46,6 +47,7 @@ val dataModule = module {
             .build()
     }
     single { HttpClient(get()) }
+    single { RemoteConfigRepository(get()) }
     single { ConnectivityObserver(androidContext()) }
     single { CustomizationStore(androidContext()) }
     single { tv.own.owntv.core.epg.EpgSourceStore(androidContext()) }

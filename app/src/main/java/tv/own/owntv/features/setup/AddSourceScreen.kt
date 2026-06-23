@@ -32,138 +32,141 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.tv.material3.MaterialTheme
 import androidx.tv.material3.Text
+import tv.own.owntv.core.config.ServerOption
 import tv.own.owntv.core.database.entity.SourceEntity
-import tv.own.owntv.core.model.SourceType
-import tv.own.owntv.ui.components.BrowseMode
 import tv.own.owntv.ui.components.FocusableSurface
 import tv.own.owntv.ui.components.OwnTVButton
-import tv.own.owntv.ui.components.StorageBrowser
 import tv.own.owntv.ui.components.OwnTVButtonStyle
 import tv.own.owntv.ui.components.OwnTVTextField
 import tv.own.owntv.ui.theme.OwnTVTheme
 
-private enum class SourceKind { XTREAM, M3U }
-
 @Composable
 fun AddSourceScreen(
+    servers: List<ServerOption>,
     onStartXtream: (name: String, server: String, user: String, pass: String, userAgent: String, epgUrl: String, refreshOnStart: Boolean) -> Unit,
-    onStartM3u: (name: String, url: String, userAgent: String, epgUrl: String, refreshOnStart: Boolean) -> Unit,
     onBack: () -> Unit,
     modifier: Modifier = Modifier,
     initial: SourceEntity? = null,
     initialRefresh: Boolean = false,
+    // M3U callback kept for compatibility but is no longer surfaced in the UI.
+    onStartM3u: ((name: String, url: String, userAgent: String, epgUrl: String, refreshOnStart: Boolean) -> Unit)? = null,
 ) {
     val colors = OwnTVTheme.colors
     val editing = initial != null
-    var kind by remember { mutableStateOf(if (initial?.type == SourceType.M3U) SourceKind.M3U else SourceKind.XTREAM) }
+
+    // When editing, try to match the existing URL back to a known server option.
+    val initialServer = if (initial != null) servers.firstOrNull { it.url == initial.url } ?: servers.firstOrNull() else servers.firstOrNull()
+
+    var selectedServer by remember { mutableStateOf(initialServer) }
     var name by remember { mutableStateOf(initial?.name ?: "") }
-    var server by remember { mutableStateOf(if (initial != null && initial.type == SourceType.XTREAM) initial.url else "") }
     var username by remember { mutableStateOf(initial?.username ?: "") }
     var password by remember { mutableStateOf(initial?.password ?: "") }
-    var m3uUrl by remember { mutableStateOf(if (initial != null && initial.type == SourceType.M3U) initial.url else "") }
-    var epgUrl by remember { mutableStateOf(initial?.epgUrl ?: "") }
     var userAgent by remember { mutableStateOf(initial?.userAgent ?: "") }
     var refreshOnStart by remember { mutableStateOf(initialRefresh) }
-    var showFileBrowser by remember { mutableStateOf(false) }
     val firstFocus = remember { FocusRequester() }
     LaunchedEffect(Unit) { runCatching { firstFocus.requestFocus() } }
 
-    val canStart = when (kind) {
-        SourceKind.XTREAM -> server.isNotBlank() && username.isNotBlank() && password.isNotBlank()
-        SourceKind.M3U -> m3uUrl.isNotBlank()
-    }
+    val canStart = selectedServer != null && username.isNotBlank() && password.isNotBlank()
 
     Box(modifier.fillMaxSize()) {
-      Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .verticalScroll(rememberScrollState())
-            .padding(horizontal = 48.dp, vertical = 36.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
-    ) {
-        Column(modifier = Modifier.widthIn(max = 560.dp), horizontalAlignment = Alignment.CenterHorizontally) {
-            Text(if (editing) "Edit source" else "Add your source", style = MaterialTheme.typography.headlineLarge, color = colors.onSurface)
-            Spacer(Modifier.height(6.dp))
-            Text(
-                if (editing) "Update this source's details, or toggle refresh on startup." else "OwnTV is a player — bring your own M3U or Xtream source.",
-                style = MaterialTheme.typography.bodyMedium,
-                color = colors.onSurfaceVariant,
-            )
-            Spacer(Modifier.height(24.dp))
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .verticalScroll(rememberScrollState())
+                .padding(horizontal = 48.dp, vertical = 36.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+        ) {
+            Column(modifier = Modifier.widthIn(max = 560.dp), horizontalAlignment = Alignment.CenterHorizontally) {
+                Text(
+                    if (editing) "Edit source" else "Add your source",
+                    style = MaterialTheme.typography.headlineLarge,
+                    color = colors.onSurface,
+                )
+                Spacer(Modifier.height(6.dp))
+                Text(
+                    if (editing) "Update your credentials or toggle refresh on startup."
+                    else "Select a server and enter your username and password.",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = colors.onSurfaceVariant,
+                )
+                Spacer(Modifier.height(24.dp))
 
-            // Source type selector (locked while editing — the type can't change, so initial focus
-            // goes to the Name field instead of a dead chip).
-            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                KindChip("Xtream", kind == SourceKind.XTREAM, Modifier.weight(1f).then(if (!editing) Modifier.focusRequester(firstFocus) else Modifier)) { if (!editing) kind = SourceKind.XTREAM }
-                KindChip("M3U / M3U8", kind == SourceKind.M3U, Modifier.weight(1f)) { if (!editing) kind = SourceKind.M3U }
-            }
-            Spacer(Modifier.height(20.dp))
-
-            OwnTVTextField(name, { name = it }, label = "Name (optional)", placeholder = "My IPTV", modifier = Modifier.fillMaxWidth(), focusRequester = if (editing) firstFocus else null)
-            Spacer(Modifier.height(14.dp))
-
-            when (kind) {
-                SourceKind.XTREAM -> {
-                    OwnTVTextField(server, { server = it }, label = "Server URL", placeholder = "http://host:port", keyboardType = KeyboardType.Uri, modifier = Modifier.fillMaxWidth())
-                    Spacer(Modifier.height(14.dp))
-                    OwnTVTextField(username, { username = it }, label = "Username", modifier = Modifier.fillMaxWidth())
-                    Spacer(Modifier.height(14.dp))
-                    OwnTVTextField(password, { password = it }, label = if (editing) "Password (leave blank to keep)" else "Password", isPassword = true, modifier = Modifier.fillMaxWidth())
-                }
-                SourceKind.M3U -> {
-                    val pickedName = remember(m3uUrl) {
-                        if (m3uUrl.startsWith("/")) java.io.File(m3uUrl).name else null
-                    }
-                    OwnTVTextField(m3uUrl, { m3uUrl = it }, label = "Playlist URL or local file", placeholder = "http://…/playlist.m3u", keyboardType = KeyboardType.Uri, modifier = Modifier.fillMaxWidth())
-                    Spacer(Modifier.height(10.dp))
-                    OwnTVButton(
-                        label = if (pickedName != null) "Local file: $pickedName" else "Choose a local .m3u / .m3u8 file…",
-                        onClick = { showFileBrowser = true },
-                        style = OwnTVButtonStyle.SECONDARY,
+                // Server selector — locked while editing (server doesn't change after import).
+                if (servers.isNotEmpty()) {
+                    Text("Server", style = MaterialTheme.typography.labelMedium, color = colors.onSurfaceVariant, modifier = Modifier.fillMaxWidth())
+                    Spacer(Modifier.height(8.dp))
+                    Column(
                         modifier = Modifier.fillMaxWidth(),
+                        verticalArrangement = Arrangement.spacedBy(8.dp),
+                    ) {
+                        servers.forEachIndexed { index, option ->
+                            val isSelected = selectedServer?.id == option.id
+                            ServerChip(
+                                label = option.name,
+                                selected = isSelected,
+                                enabled = !editing,
+                                modifier = if (index == 0 && !editing) Modifier.fillMaxWidth().focusRequester(firstFocus) else Modifier.fillMaxWidth(),
+                                onClick = { if (!editing) selectedServer = option },
+                            )
+                        }
+                    }
+                    Spacer(Modifier.height(20.dp))
+                } else {
+                    Text(
+                        "No servers available. Please try again later.",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = colors.onSurfaceVariant,
+                    )
+                    Spacer(Modifier.height(20.dp))
+                }
+
+                OwnTVTextField(
+                    name, { name = it },
+                    label = "Name (optional)",
+                    placeholder = "My IPTV",
+                    modifier = Modifier.fillMaxWidth(),
+                    focusRequester = if (editing) firstFocus else null,
+                )
+                Spacer(Modifier.height(14.dp))
+                OwnTVTextField(username, { username = it }, label = "Username", modifier = Modifier.fillMaxWidth())
+                Spacer(Modifier.height(14.dp))
+                OwnTVTextField(
+                    password, { password = it },
+                    label = if (editing) "Password (leave blank to keep)" else "Password",
+                    isPassword = true,
+                    modifier = Modifier.fillMaxWidth(),
+                )
+
+                Spacer(Modifier.height(14.dp))
+                OwnTVTextField(
+                    userAgent, { userAgent = it },
+                    label = "User-Agent (optional)",
+                    placeholder = "e.g. VLC/3.0.20 LibVLC/3.0.20",
+                    modifier = Modifier.fillMaxWidth(),
+                )
+
+                Spacer(Modifier.height(16.dp))
+                ToggleRow(
+                    label = "Refresh on startup",
+                    desc = "Re-sync this source when the app opens",
+                    checked = refreshOnStart,
+                ) { refreshOnStart = it }
+
+                Spacer(Modifier.height(28.dp))
+                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                    OwnTVButton("Back", onClick = onBack, style = OwnTVButtonStyle.SECONDARY)
+                    Spacer(Modifier.weight(1f))
+                    OwnTVButton(
+                        label = if (editing) "Save" else "Start Import",
+                        onClick = {
+                            val srv = selectedServer ?: return@OwnTVButton
+                            onStartXtream(name, srv.url, username, password, userAgent, "", refreshOnStart)
+                        },
+                        enabled = canStart,
                     )
                 }
             }
-
-            // EPG is managed separately now (Settings → EPG Sources), so no EPG field here. For an
-            // Xtream server the guide URL is still derived automatically; M3U EPG can be added there.
-            Spacer(Modifier.height(14.dp))
-            OwnTVTextField(userAgent, { userAgent = it }, label = "User-Agent (optional)", placeholder = "e.g. VLC/3.0.20 LibVLC/3.0.20", modifier = Modifier.fillMaxWidth())
-
-            Spacer(Modifier.height(16.dp))
-            ToggleRow(label = "Refresh on startup", desc = "Re-sync this source when the app opens", checked = refreshOnStart) { refreshOnStart = it }
-
-            Spacer(Modifier.height(28.dp))
-            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                OwnTVButton("Back", onClick = onBack, style = OwnTVButtonStyle.SECONDARY)
-                Spacer(Modifier.weight(1f))
-                OwnTVButton(
-                    label = if (editing) "Save" else "Start Import",
-                    onClick = {
-                        when (kind) {
-                            SourceKind.XTREAM -> onStartXtream(name, server, username, password, userAgent, epgUrl, refreshOnStart)
-                            SourceKind.M3U -> onStartM3u(name, m3uUrl, userAgent, epgUrl, refreshOnStart)
-                        }
-                    },
-                    enabled = canStart,
-                )
-            }
         }
-      }
-      // In-app, TV-safe file picker (SAF / system file picker is missing on many TVs).
-      if (showFileBrowser) {
-          StorageBrowser(
-              title = "Pick a playlist file (.m3u / .m3u8)",
-              mode = BrowseMode.FILE,
-              fileExtensions = setOf("m3u", "m3u8"),
-              onPick = { file ->
-                  showFileBrowser = false
-                  m3uUrl = file.absolutePath
-                  if (name.isBlank()) name = file.nameWithoutExtension
-              },
-              onDismiss = { showFileBrowser = false },
-          )
-      }
     }
 }
 
@@ -192,23 +195,23 @@ private fun ToggleRow(label: String, desc: String, checked: Boolean, onToggle: (
 }
 
 @Composable
-private fun KindChip(label: String, selected: Boolean, modifier: Modifier, onClick: () -> Unit) {
+private fun ServerChip(label: String, selected: Boolean, enabled: Boolean, modifier: Modifier, onClick: () -> Unit) {
     val colors = OwnTVTheme.colors
     FocusableSurface(
         onClick = onClick,
         modifier = modifier,
         selected = selected,
         shape = RoundedCornerShape(14.dp),
-        focusedContainerColor = colors.surfaceContainerHighest,
+        focusedContainerColor = if (enabled) colors.surfaceContainerHighest else colors.surfaceContainerHigh,
         unfocusedContainerColor = colors.surfaceContainerHigh,
         selectedContainerColor = colors.primaryContainer,
-        contentAlignment = Alignment.Center,
+        contentAlignment = Alignment.CenterStart,
     ) { _ ->
         Text(
             label,
             style = MaterialTheme.typography.titleMedium,
             color = if (selected) colors.onPrimaryContainer else colors.onSurface,
-            modifier = Modifier.padding(vertical = 14.dp),
+            modifier = Modifier.padding(horizontal = 16.dp, vertical = 14.dp),
         )
     }
 }

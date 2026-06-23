@@ -9,6 +9,8 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import tv.own.owntv.core.backup.BackupManager
+import tv.own.owntv.core.config.RemoteConfigRepository
+import tv.own.owntv.core.config.ServerOption
 import tv.own.owntv.core.database.dao.ProfileDao
 import tv.own.owntv.core.database.dao.SourceDao
 import tv.own.owntv.core.database.entity.ProfileEntity
@@ -36,6 +38,7 @@ class SetupViewModel(
     private val settings: SettingsRepository,
     private val connectivity: ConnectivityObserver,
     private val importFinalizer: tv.own.owntv.core.sync.ImportFinalizer,
+    private val remoteConfig: RemoteConfigRepository,
 ) : ViewModel() {
 
     sealed interface ImportState {
@@ -44,6 +47,15 @@ class SetupViewModel(
         /** Per-type breakdown (incl. EPG) shown on the onboarding "All set" screen. */
         data class Success(val summary: String) : ImportState
         data class Failed(val message: String) : ImportState
+    }
+
+    private val _servers = MutableStateFlow<List<ServerOption>>(emptyList())
+    val servers: StateFlow<List<ServerOption>> = _servers.asStateFlow()
+
+    init {
+        viewModelScope.launch {
+            runCatching { _servers.value = remoteConfig.fetchConfig().servers }
+        }
     }
 
     private val _state = MutableStateFlow<ImportState>(ImportState.Idle)
