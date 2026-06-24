@@ -40,8 +40,8 @@ val appModule = module {
     viewModel { SettingsViewModel(get(), get(), get(), get(), get(), get(), get(), get()) }
     // downloadDao, settings, downloadManager, player
     viewModel { DownloadsViewModel(get(), get(), get(), get()) }
-    // settings, sourceRepository, channelDao, epgDao, epgRepository, epgSourceStore, connectivity, customize, historyDao, sourceDao, xtream, player
-    viewModel { EpgViewModel(get(), get(), get(), get(), get(), get(), get(), get(), get(), get(), get(), get()) }
+    // settings, sourceRepository, channelDao, epgDao, epgRepository, epgSourceStore, connectivity, customize, historyDao, sourceDao, xtream, player, categoryDao
+    viewModel { EpgViewModel(get(), get(), get(), get(), get(), get(), get(), get(), get(), get(), get(), get(), get()) }
     // settings, sourceDao, categoryDao, customizationStore
     viewModel { CustomizeViewModel(get(), get(), get(), get()) }
     // backupManager

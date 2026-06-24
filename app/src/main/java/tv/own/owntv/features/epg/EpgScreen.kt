@@ -98,6 +98,8 @@ fun EpgScreen(
     val review by vm.review.collectAsStateWithLifecycle()
     val matchSummary by vm.matchSummary.collectAsStateWithLifecycle()
     val sortGuide by vm.sortGuide.collectAsStateWithLifecycle()
+    val categories by vm.categories.collectAsStateWithLifecycle()
+    val selectedCategoryId by vm.selectedCategoryId.collectAsStateWithLifecycle()
     val colors = OwnTVTheme.colors
     val hScroll = rememberScrollState()
     val rowListState = androidx.compose.foundation.lazy.rememberLazyListState()
@@ -256,6 +258,20 @@ fun EpgScreen(
             modifier = Modifier.fillMaxWidth(),
         )
         Spacer(Modifier.height(12.dp))
+
+        // Category filter chips — only shown when the profile has multiple LIVE categories.
+        if (categories.isNotEmpty()) {
+            Row(
+                modifier = Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()),
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+            ) {
+                CategoryChip(label = "All", selected = selectedCategoryId == null, onClick = { vm.setCategory(null) })
+                categories.forEach { cat ->
+                    CategoryChip(label = cat.name, selected = selectedCategoryId == cat.id, onClick = { vm.setCategory(cat.id) })
+                }
+            }
+            Spacer(Modifier.height(10.dp))
+        }
 
         when {
             state.loading -> CenterBox { OwnTVSpinner(sizeDp = 56) }
@@ -695,6 +711,25 @@ private fun ProgrammeDetailDialog(
                 }
             }
         }
+    }
+}
+
+@Composable
+private fun CategoryChip(label: String, selected: Boolean, onClick: () -> Unit) {
+    val colors = OwnTVTheme.colors
+    FocusableSurface(
+        onClick = onClick,
+        shape = RoundedCornerShape(20.dp),
+        unfocusedContainerColor = if (selected) colors.primaryContainer else colors.surfaceContainerHigh,
+        contentAlignment = Alignment.Center,
+    ) { _ ->
+        Text(
+            label,
+            style = MaterialTheme.typography.labelLarge,
+            color = if (selected) colors.onPrimaryContainer else colors.onSurfaceVariant,
+            maxLines = 1, overflow = TextOverflow.Ellipsis,
+            modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
+        )
     }
 }
 

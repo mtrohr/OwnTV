@@ -21,6 +21,7 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import tv.own.owntv.core.customize.SectionCustomizations
+import tv.own.owntv.core.database.dao.CategoryDao
 import tv.own.owntv.core.database.dao.ChannelDao
 import tv.own.owntv.core.database.dao.EpgDao
 import tv.own.owntv.core.database.dao.HistoryDao
@@ -30,6 +31,7 @@ import tv.own.owntv.core.model.SourceType
 import tv.own.owntv.core.parser.XtreamClient
 import tv.own.owntv.core.customize.CustomizationStore
 import tv.own.owntv.core.customize.CustomizeKeys
+import tv.own.owntv.core.database.entity.CategoryEntity
 import tv.own.owntv.core.database.entity.ChannelEntity
 import tv.own.owntv.core.database.entity.EpgProgrammeEntity
 import tv.own.owntv.core.database.entity.WatchHistoryEntity
@@ -76,6 +78,7 @@ class EpgViewModel(
     private val sourceDao: SourceDao,
     private val xtream: XtreamClient,
     val player: OwnTVPlayer,
+    private val categoryDao: CategoryDao,
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(EpgUiState())
@@ -83,6 +86,20 @@ class EpgViewModel(
 
     private val _query = MutableStateFlow("")
     val query: StateFlow<String> = _query.asStateFlow()
+
+    private val _selectedCategoryId = MutableStateFlow<Long?>(null)
+    val selectedCategoryId: StateFlow<Long?> = _selectedCategoryId.asStateFlow()
+
+    /** LIVE categories for the active profile's sources. */
+    val categories: StateFlow<List<CategoryEntity>> = settings.activeProfileId
+        .flatMapLatest { pid ->
+            if (pid < 0) flowOf(emptyList())
+            else sourceRepository.observeSources(pid).flatMapLatest { srcs ->
+                if (srcs.isEmpty()) flowOf(emptyList())
+                else categoryDao.observe(srcs.map { it.id }, tv.own.owntv.core.model.MediaType.LIVE)
+            }
+        }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
 
     // Per-row programme cache (epg key → programmes in the current window). Rows re-read it instantly
     // when scrolled back into view; cleared whenever the window/data reloads.
@@ -142,6 +159,11 @@ class EpgViewModel(
 
     fun setQuery(q: String) {
         _query.value = q
+    }
+
+    fun setCategory(id: Long?) {
+        _selectedCategoryId.value = id
+        viewModelScope.launch { load() }
     }
 
     /** The channel last tuned from the guide — the screen refocuses its row after fullscreen exits. */
@@ -399,8 +421,10 @@ class EpgViewModel(
             // Respect customizations: hidden channels stay out of the guide, renames show.
             val cust = customize.observe(pid, MediaType.LIVE).first()
             val q = _query.value.trim()
+            val catFilter = _selectedCategoryId.value
             val auto = channelDao.channelsWithGuide(ids, windowStart, windowEnd, q, MAX_CHANNELS)
                 .filter { CustomizeKeys.channel(it) !in cust.hiddenItems }
+                .filter { catFilter == null || it.categoryId == catFilter }
                 .map { ch -> cust.itemNames[CustomizeKeys.channel(ch)]?.let { ch.copy(name = it) } ?: ch }
             // Manual EPG matches: override the matched channels' epg id, and pull in any matched
             // channel that wouldn't otherwise appear (its own epg id didn't auto-match).
