@@ -46,7 +46,18 @@ class SourceRepository(
         return source.copy(id = id)
     }
 
-    suspend fun deleteSource(source: SourceEntity) = sourceDao.delete(source)
+    suspend fun deleteSource(source: SourceEntity) {
+        // Remove the auto-registered EPG entry for this source (if any) before deleting the source.
+        val epgUrl = epgRepository.guideUrl(source)
+        if (epgUrl != null) {
+            val epgSource = epgSourceStore.getAll().firstOrNull { it.url == epgUrl }
+            if (epgSource != null) {
+                epgSourceStore.remove(epgSource.id)
+                epgRepository.clear(epgSource.id)
+            }
+        }
+        sourceDao.delete(source)
+    }
 
     suspend fun updateSource(source: SourceEntity) = sourceDao.update(source)
 
