@@ -251,7 +251,7 @@ class SettingsViewModel(
                         // Settings playlist add: content breakdown only (EPG syncs silently and is
                         // shown on the EPG Sources screen, per the separated-EPG design).
                         val counts = importFinalizer.finalize(source)
-                        _importState.value = ImportState.Success(counts.summary(includeEpg = false))
+                        _importState.value = ImportState.Success(counts.summary(includeEpg = true))
                     }
                     is SyncResult.Failed -> _importState.value = ImportState.Failed(friendlySyncError(r.message, connectivity.isOnlineNow()))
                     SyncResult.Cancelled -> _importState.value = ImportState.Idle
@@ -272,7 +272,7 @@ class SettingsViewModel(
             when (val r = sourceRepository.sync(source) { _progress.value = it }) {
                 SyncResult.Success -> {
                     val counts = importFinalizer.finalize(source)
-                    _importState.value = ImportState.Success(counts.summary(includeEpg = false))
+                    _importState.value = ImportState.Success(counts.summary(includeEpg = true))
                 }
                 is SyncResult.Failed -> _importState.value = ImportState.Failed(friendlySyncError(r.message, connectivity.isOnlineNow()))
                 SyncResult.Cancelled -> _importState.value = ImportState.Idle

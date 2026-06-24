@@ -60,8 +60,8 @@ val dataModule = module {
     single { SyncManager(androidContext(), get(), get(), get(), get(), get(), get(), get(), get()) }
     // context, channelDao, movieDao, seriesDao, favoriteDao, historyDao, progressDao
     single { UserDataResolver(androidContext(), get(), get(), get(), get(), get(), get()) }
-    // sourceDao, syncManager, userDataResolver
-    single { SourceRepository(get(), get(), get()) }
+    // sourceDao, syncManager, userDataResolver, epgSourceStore, epgRepository
+    single { SourceRepository(get(), get(), get(), get(), get()) }
     // epgDao, httpClient, xtreamClient
     single { EpgRepository(get(), get(), get()) }
     // seriesDao, sourceDao, xtreamClient, userDataResolver

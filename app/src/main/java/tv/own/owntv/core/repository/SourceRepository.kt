@@ -4,6 +4,7 @@ import kotlinx.coroutines.flow.Flow
 import tv.own.owntv.core.database.dao.SourceDao
 import tv.own.owntv.core.database.entity.ProfileSourceCrossRef
 import tv.own.owntv.core.database.entity.SourceEntity
+import tv.own.owntv.core.epg.EpgSourceStore
 import tv.own.owntv.core.model.SourceType
 import tv.own.owntv.core.sync.ImportStage
 import tv.own.owntv.core.sync.SyncManager
@@ -17,6 +18,8 @@ class SourceRepository(
     private val sourceDao: SourceDao,
     private val syncManager: SyncManager,
     private val userData: tv.own.owntv.core.backup.UserDataResolver,
+    private val epgSourceStore: EpgSourceStore,
+    private val epgRepository: EpgRepository,
 ) {
     fun observeSources(profileId: Long): Flow<List<SourceEntity>> = sourceDao.observeForProfile(profileId)
 
@@ -56,7 +59,25 @@ class SourceRepository(
             // Content rows just regenerated — re-attach the snapshot (and any restored backup data) to
             // the new ids, and drop rows the provider removed.
             runCatching { userData.relinkAfterSync(snapshot ?: org.json.JSONArray()) }
+            // Auto-register and sync the EPG for this source. Failures are silently swallowed so a
+            // slow or unavailable EPG feed never blocks the playlist import success screen.
+            runCatching { autoSyncEpg(source, onProgress) }
         }
         return result
+    }
+
+    /**
+     * Derives the guide URL for [source] (Xtream xmltv.php / M3U url-tvg), registers it as an EPG
+     * source if not already present, then downloads and stores the guide data. Re-syncs the existing
+     * EPG source on every playlist re-sync so the guide stays current.
+     */
+    private suspend fun autoSyncEpg(source: SourceEntity, onProgress: (ImportStage) -> Unit) {
+        val epgUrl = epgRepository.guideUrl(source) ?: return
+        onProgress(ImportStage("EPG", 0, null))
+        val existing = epgSourceStore.getAll().firstOrNull { it.url == epgUrl }
+        val epgSource = existing ?: epgSourceStore.add(name = source.name, url = epgUrl, userAgent = source.userAgent)
+        val count = epgRepository.refreshUrl(epgSource.id, epgUrl, source.userAgent)
+        epgSourceStore.setSynced(epgSource.id, System.currentTimeMillis(), null)
+        onProgress(ImportStage("EPG", count, null))
     }
 }

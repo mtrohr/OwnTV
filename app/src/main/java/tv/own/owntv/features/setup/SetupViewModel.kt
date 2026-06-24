@@ -117,7 +117,7 @@ class SetupViewModel(
                     SyncResult.Success -> {
                         // Just the playlist content — EPG is added separately (Settings → EPG sources).
                         val counts = importFinalizer.finalize(source)
-                        _state.value = ImportState.Success(counts.summary(includeEpg = false))
+                        _state.value = ImportState.Success(counts.summary(includeEpg = true))
                     }
                     is SyncResult.Failed -> _state.value = ImportState.Failed(friendlySyncError(result.message, connectivity.isOnlineNow()))
                     SyncResult.Cancelled -> _state.value = ImportState.Idle
