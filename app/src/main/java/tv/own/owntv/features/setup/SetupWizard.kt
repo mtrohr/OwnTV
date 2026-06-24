@@ -73,14 +73,14 @@ fun Onboarding(firstRun: Boolean, onDone: () -> Unit, onCancel: () -> Unit, modi
 
     Box(modifier = modifier.fillMaxSize().background(OwnTVTheme.colors.background)) {
         when (step) {
-            Step.WELCOME -> WelcomeScreen(onNext = { step = Step.DISCLAIMER })
+            Step.WELCOME -> WelcomeScreen(onNext = { step = Step.SETUP_CHOICE })
             Step.DISCLAIMER -> DisclaimerScreen(onAgree = { step = Step.SETUP_CHOICE }, onBack = { step = Step.WELCOME })
             // First decision: start fresh or bring everything back from a backup (profiles included —
             // no point creating a profile first that the restore would replace).
             Step.SETUP_CHOICE -> SetupChoiceScreen(
                 onCreate = { step = Step.CREATE_PROFILE },
                 onRestore = { backupOrigin = Step.SETUP_CHOICE; step = Step.IMPORT_BACKUP },
-                onBack = { step = Step.DISCLAIMER },
+                onBack = { step = Step.WELCOME },
             )
             Step.CREATE_PROFILE -> ProfileEditorDialog(
                 initial = null,
