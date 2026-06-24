@@ -189,7 +189,7 @@ private fun AddContentScreen(hasExisting: Boolean, onNew: () -> Unit, onExisting
         Text("Add a source for this profile, or set one up later.", style = MaterialTheme.typography.bodyMedium, color = colors.onSurfaceVariant)
         Spacer(Modifier.height(24.dp))
         Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
-            ChoiceCard(icon = OwnTVIcon.ADD, title = "New", desc = "Add an M3U or Xtream source", modifier = Modifier.focusRequester(fr), onClick = onNew)
+            ChoiceCard(icon = OwnTVIcon.ADD, title = "New", desc = "Add a Playlist", modifier = Modifier.focusRequester(fr), onClick = onNew)
             if (hasExisting) {
                 ChoiceCard(icon = OwnTVIcon.PLAYLIST, title = "Existing", desc = "Use another profile's playlists", onClick = onExisting)
             }
