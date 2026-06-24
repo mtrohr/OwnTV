@@ -1,7 +1,6 @@
 package tv.own.owntv.features.shell.components
 
 import androidx.activity.compose.BackHandler
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.focusGroup
@@ -524,10 +523,7 @@ private fun Swatch(
     }
 }
 
-private const val GITHUB_REPO = "github.com/ahXN00/OwnTV"
-private const val TELEGRAM_LINK = "t.me/owntvplayer"
-
-/** About OwnTV: version, license, author and project link — all readable on screen (no TV browser). */
+/** About OwnTV AHV: version and support contacts. */
 @Composable
 private fun AboutDialog(onDismiss: () -> Unit) {
     val colors = OwnTVTheme.colors
@@ -545,49 +541,30 @@ private fun AboutDialog(onDismiss: () -> Unit) {
             BrandLockup(markSize = 48, textSize = 30)
             Spacer(Modifier.height(6.dp))
             Text("Version ${tv.own.owntv.BuildConfig.VERSION_NAME}", style = MaterialTheme.typography.titleMedium, color = colors.primary)
-            Spacer(Modifier.height(14.dp))
+            Spacer(Modifier.height(20.dp))
             Text(
-                "Your own IPTV player for Android TV — a free, open-source, player-only app. " +
-                    "It provides no channels or content; you bring your own legally accessible sources.",
+                "For issues with your app or service, contact your service provider:",
                 style = MaterialTheme.typography.bodyMedium,
                 color = colors.onSurfaceVariant,
                 textAlign = TextAlign.Center,
             )
-            Spacer(Modifier.height(14.dp))
-            Text("© 2026 Ashiq Hasan · MIT License", style = MaterialTheme.typography.bodyMedium, color = colors.onSurface)
-            Spacer(Modifier.height(4.dp))
-            Text(GITHUB_REPO, style = MaterialTheme.typography.bodyMedium, color = colors.primary)
             Spacer(Modifier.height(16.dp))
-            // Community: Telegram link + a QR, side-by-side to keep the dialog compact, so TV users can
-            // join from their phone — no TV browser needed.
-            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(16.dp)) {
-                Column(Modifier.weight(1f)) {
-                    Text("Join us on Telegram", style = MaterialTheme.typography.titleSmall, color = colors.onSurface)
-                    Spacer(Modifier.height(2.dp))
-                    Text(TELEGRAM_LINK, style = MaterialTheme.typography.bodyMedium, color = colors.primary)
-                    Spacer(Modifier.height(6.dp))
-                    Text(
-                        "Scan the QR to join from your phone, or open the link above.",
-                        style = MaterialTheme.typography.bodySmall, color = colors.onSurfaceVariant,
-                    )
-                }
-                Box(Modifier.clip(RoundedCornerShape(10.dp)).background(Color.White).padding(6.dp)) {
-                    Image(
-                        painter = androidx.compose.ui.res.painterResource(tv.own.owntv.R.drawable.telegram_qr),
-                        contentDescription = "Telegram group QR code",
-                        modifier = Modifier.size(120.dp),
-                    )
-                }
-            }
-            Spacer(Modifier.height(16.dp))
-            Text(
-                "Contributions, bug reports & stars are welcome on GitHub.",
-                style = MaterialTheme.typography.bodySmall,
-                color = colors.onSurfaceVariant,
-            )
-            Spacer(Modifier.height(20.dp))
+            SupportContact("Astranet TV", "admin@astrahosting.xyz", colors)
+            Spacer(Modifier.height(10.dp))
+            SupportContact("Hyper TV", "admin@hyperhost.shop", colors)
+            Spacer(Modifier.height(10.dp))
+            SupportContact("Vyle TV", "admin@vylehost.com", colors)
+            Spacer(Modifier.height(24.dp))
             OwnTVButton("Close", onClick = onDismiss, modifier = Modifier.focusRequester(focus))
         }
+    }
+}
+
+@Composable
+private fun SupportContact(provider: String, email: String, colors: tv.own.owntv.ui.theme.OwnTVColors) {
+    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+        Text(provider, style = MaterialTheme.typography.titleSmall, color = colors.onSurface)
+        Text(email, style = MaterialTheme.typography.bodyMedium, color = colors.primary)
     }
 }
 
