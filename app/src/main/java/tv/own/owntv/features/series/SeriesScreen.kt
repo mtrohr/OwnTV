@@ -342,7 +342,10 @@ private fun EpisodeView(
             }
             else -> {
                 if (seasons.size > 1) {
-                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Row(
+                        modifier = Modifier.horizontalScroll(androidx.compose.foundation.rememberScrollState()),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    ) {
                         seasons.forEach { season ->
                             SeasonChip(season = season, selected = season == activeSeason) { vm.selectSeason(season) }
                         }
