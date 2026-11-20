@@ -3,6 +3,8 @@ package tv.own.owntv.features.series
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
 import androidx.compose.foundation.focusGroup
+import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -343,7 +345,7 @@ private fun EpisodeView(
             else -> {
                 if (seasons.size > 1) {
                     Row(
-                        modifier = Modifier.horizontalScroll(androidx.compose.foundation.rememberScrollState()),
+                        modifier = Modifier.horizontalScroll(rememberScrollState()),
                         horizontalArrangement = Arrangement.spacedBy(8.dp),
                     ) {
                         seasons.forEach { season ->
